@@ -1,23 +1,29 @@
+// ArticleList.jsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getArticles, removeArticle, getCategories, getArticlesByCategory } from "../services/api";
+import { getArticles, removeArticle, getCategories } from "../services/api";
 
-//
-// ArticleList component
-//
 export default function ArticleList() {
   const [articles, setArticles] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-
-  
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchArticles(); // Fetch all articles when component mounts
+    fetchCategories();
+    fetchArticles();
   }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const data = await getCategories();
+      setCategories(data);
+    } catch {
+      setError("Failed to load categories.");
+    }
+  };
 
   const fetchArticles = async () => {
     setIsLoading(true);
@@ -25,112 +31,54 @@ export default function ArticleList() {
     try {
       const data = await getArticles();
       setArticles(data);
-    } catch (err) {
-      setError("Failed to load articles. Please try again.");
+    } catch {
+      setError("Failed to load articles.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const [categories, setCategories] = useState([]);
-  useEffect(() => {
-    fetchCate(); 
-  }, []);
-  const fetchCate = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const data = await getCategories();
-      setCategories(data);
-    } catch (err) {
-      setError("Failed to load categories. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-  const fetchFilteredArticles = async () => {
-    setIsLoading(true);
-    setError("");
-    try {
-      if (selectedCategories.length === 0) {
-        const data = await getArticles();
-        setArticles(data);
-      } else {
-        const data = await getArticlesByCategory(selectedCategories);
-        setArticles(data);
-      }
-    } catch (err) {
-      setError("Failed to load filtered articles.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  fetchFilteredArticles();
-}, [selectedCategories]);
-
-  const toggleCategory = (id) => {
-  handleCategory(id);
-};
-
-
-  
   const deleteArticle = async (id) => {
-    setIsLoading(true);
-    setError("");
     try {
       await removeArticle(id);
-      await fetchArticles(); // refresh the list
-    } catch (err) {
+      fetchArticles(); // Refresh articles after deletion
+    } catch {
       setError("Failed to delete article.");
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  
-
-
   const handleView = (id) => navigate(`/articles/${id}`);
-
   const handleEdit = (id) => navigate(`/articles/${id}/edit`);
-
   const handleArticle = (id) => navigate(`/journalists/${id}/articles`);
 
-  const handleCategory = (id) => navigate(`/categories/${id}/articles`);
-
-
+  // Navigate to category articles page on category select
+  const handleCategory = (id) => {
+    if (id) {
+      navigate(`/categories/${id}/articles`);
+    } else {
+      navigate("/articles"); // Show all articles
+    }
+  };
 
   return (
     <>
       {isLoading && <p>Loading...</p>}
       {error && <p style={{ color: "red" }}>{error}</p>}
 
-        
-      <div style={{ marginBottom: "1rem",marginTop: "1rem", display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-        {categories.map((category) => {
-          const isSelected = selectedCategories.includes(category.id);
-          return (
-            <button
-              key={category.id}
-              onClick={() => toggleCategory(category.id) }
-
-              className="button-tertiary"
-              value={category.id}
-              style={{
-                padding: "6px 12px",
-                borderRadius: "20px",
-                border: isSelected ? "2px solid blue" : "1px solid gray",
-                backgroundColor: isSelected ? "#cce4ff" : "#f0f0f0",
-                cursor: "pointer"
-              }}
-            >
-              {category.name}
-            </button>
-          );
-        })}
+      <div style={{ marginBottom: 16 }}>
+        <label htmlFor="category-select">Filter by Category: </label>
+        <select
+          id="category-select"
+          onChange={(e) => handleCategory(e.target.value)}
+          defaultValue=""
+        >
+          <option value="">All</option>
+          {categories.map((cat) => (
+            <option key={cat.id} value={cat.id}>
+              {cat.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="article-list">
@@ -153,15 +101,15 @@ function ArticleCard({ article, onView, onEdit, onDelete, onArticle }) {
   return (
     <div className="article-card">
       <div className="article-title">{article.title}</div>
-      <div className="article-author" onClick={() => onArticle(article.journalistsId)}>By <a href="">{article.journalist}</a> </div>
+      <div className="article-author" onClick={() => onArticle(article.journalistsId)} style={{ cursor: "pointer" }}>
+        By <a href="#">{article.journalistName}</a>
+      </div>
+      <div className="article-category">Category: {article.categoryName}</div>
       <div className="article-actions">
         <button className="button-tertiary" onClick={() => onEdit(article.id)}>
           Edit
         </button>
-        <button
-          className="button-tertiary"
-          onClick={() => onDelete(article.id)}
-        >
+        <button className="button-tertiary" onClick={() => onDelete(article.id)}>
           Delete
         </button>
         <button className="button-secondary" onClick={() => onView(article.id)}>

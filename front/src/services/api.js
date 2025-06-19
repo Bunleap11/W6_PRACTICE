@@ -35,8 +35,7 @@ export const getCategories = async () => {
   const response = await axios.get(`${API_BASE_URL}/articles/categories`);
   return response.data;
 };
-export const getArticlesByCategory = async (categoryIds) => {
-  const query = categoryIds.join(",");
+export const getArticlesByCategory = async (id) => {
   const response = await axios.get(`${API_BASE_URL}/articles/categories/${id}/articles`);
   return response.data;
 };

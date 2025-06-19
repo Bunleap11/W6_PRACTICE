@@ -9,8 +9,8 @@ export default function ArticleForm({ isEdit }) {
   const [formData, setFormData] = useState({
     title: "",
     content: "",
-    journalist: "",
-    category: "",
+    journalistsId: "",
+    categoryId: "",
   });
 
   const [isLoading, setIsLoading] = useState(false);
@@ -82,16 +82,16 @@ export default function ArticleForm({ isEdit }) {
         />
         <br />
         <input
-          name="journalist"
-          value={formData.journalist}
+          name="journalistsId"
+          value={formData.journalistsId}
           onChange={handleChange}
           placeholder="Journalist ID"
           required
         />
         <br />
         <input
-          name="category"
-          value={formData.category}
+          name="categoryId"
+          value={formData.categoryId}
           onChange={handleChange}
           placeholder="Category ID"
           required

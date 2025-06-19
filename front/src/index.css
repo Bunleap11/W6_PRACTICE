@@ -204,3 +204,8 @@ button:hover {
   color: white;
   border-color: var(--main-color-light);
 }
+.article-category {
+  font-size: 0.8em;
+  color: var(--grey-color);
+  margin-bottom: 16px;
+}

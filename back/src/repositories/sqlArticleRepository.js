@@ -8,7 +8,10 @@ import { pool } from "../utils/database.js"
 // Get all articles
 export async function getArticles() {
     // TODO
-    const [rows] = await pool.query("SELECT * FROM articles");
+    const [rows] = await pool.query(`
+        SELECT articles.*, journalists.name as journalistName, categories.name as categoryName FROM articles 
+        JOIN journalists ON articles.journalistsId = journalists.id
+        JOIN categories ON articles.categoryId = categories.id `);
     return rows;
 }
 
@@ -16,8 +19,9 @@ export async function getArticles() {
 export async function getArticleById(id) {
     // TODO
     const [rows] = await pool.query(`
-        SELECT articles.*, journalists.name as journalistName FROM articles 
+        SELECT articles.*, journalists.name as journalistName, categories.name as categoryName FROM articles 
         JOIN journalists ON articles.journalistsId = journalists.id
+        JOIN categories ON articles.categoryId = categories.id
         WHERE articles.id = ?
     `, [id]);
     return rows[0];
@@ -26,14 +30,14 @@ export async function getArticleById(id) {
 // Create a new article
 export async function createArticle(article) {
     // TODO
-    const [result] = await pool.query("INSERT INTO articles (title, content, journalist, category) VALUES (?, ?, ?, ?)", [article.title, article.content, article.journalist, article.category]);
+    const [result] = await pool.query("INSERT INTO articles (title, content, journalistsId, categoryId) VALUES (?, ?, ?, ?)", [article.title, article.content, article.journalistsId, article.categoryId]);
     return { id: result.insertId, ...article };
 }
 
 // Update an article by ID
 export async function updateArticle(id, updatedData) {
     // TODO
-    const [result] = await pool.query("UPDATE articles SET title = ?, content = ?, journalist = ?, category = ? WHERE id = ?", [updatedData.title, updatedData.content, updatedData.journalist, updatedData.category, id]);
+    const [result] = await pool.query("UPDATE articles SET title = ?, content = ?, journalistsId = ?, categoryId = ? WHERE id = ?", [updatedData.title, updatedData.content, updatedData.journalistsId, updatedData.categoryId, id]);
     if (result.affectedRows === 0) {
         return null;
     }
@@ -69,7 +73,8 @@ export async function getAllCategory() {
 }
 export async function getArticlesByCategoryId(id) {
     const [rows] = await pool.query(`
-        SELECT articles.*, categories.name as categoryName FROM articles
+        SELECT articles.*,journalists.name as journalistName, categories.name as categoryName FROM articles
+        JOIN journalists ON articles.journalistsId = journalists.id
         JOIN categories ON articles.categoryId = categories.id
         WHERE categories.id = ?
     `, [id]);
